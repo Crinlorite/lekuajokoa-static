@@ -210,6 +210,30 @@
       position: relative;
     }
 
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,.5);
+      padding: 6px 10px;
+      background: rgba(148,163,184,.15);
+      color: #e5e7eb;
+      cursor: pointer;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+
+    .chip:hover { transform: translateY(-1px); border-color: #22d3ee; }
+    .chip:active { transform: translateY(0); }
+    .chip.selected { background: rgba(52,211,153,.16); border-color: #34d399; }
+    .chip.correct { background: rgba(74,222,128,.2); border-color: #4ade80; }
+    .chip.locked { opacity: 0.6; cursor: not-allowed; }
+
+    .attempts { font-size: 0.8rem; color: #9ca3af; }
+
     .launchpad .ball {
       position: relative;
       transform: none;
@@ -254,7 +278,7 @@
 <main class="game">
 
   <h1>Posizioak euskaraz (A1)</h1>
-  <p class="subtitle">Arrastatu pilota esaldian deskribatutako posiziora.</p>
+  <p class="subtitle">Aukeratu txip batekin non dagoen pilota edo kutxa, ikusitako egoeran.</p>
 
   <div class="clue">
     Esaldia: <span id="clue-text"></span>
@@ -269,10 +293,13 @@
       <div id="drop-zones" aria-hidden="true"></div>
       <div class="shadow" aria-hidden="true"></div>
       <div id="companion-ball" class="companion-ball" aria-hidden="true"></div>
+      <div id="draggable" class="ball" aria-hidden="true"></div>
     </div>
     <div class="launchpad">
-      <p>Arrastatu pilota kokalekuan jartzeko. Bigarren pilota morea automatikoki kokatuko da, kutxa bien artean geratzeko.</p>
-      <div id="draggable" class="ball" role="button" aria-label="Arrastatu pilota"></div>
+      <p>Begira eszenari: non dago elementua galderak dioen bezala? Hautatu erantzuna txip batekin. Posizio oso antzekoak daude, beraz 3 saiakera dituzu.</p>
+      <div id="question-text"></div>
+      <div id="chips" class="chip-group" role="listbox" aria-label="Erantzun posibleak"></div>
+      <div class="attempts" id="attempts"></div>
     </div>
   </div>
 
@@ -317,56 +344,49 @@ const POSITION_COORDS = {
   inguruan:   { x: 50, y: 10 },
 };
 
+const INVERSE_POSITION = {
+  gainean: "azpian",
+  azpian: "gainean",
+  aurrean: "atzean",
+  atzean: "aurrean",
+  eskuinean: "ezkerrean",
+  ezkerrean: "eskuinean",
+  ondoan: "ondoan",
+};
+
+const QUESTION_BUILDERS = [
+  {
+    id: "ball",
+    prompt: "Non dago pilota kutxarekiko?",
+    isValid: () => true,
+    getAnswer: (pos) => pos.id,
+  },
+  {
+    id: "box",
+    prompt: "Non dago kutxa pilotarekiko?",
+    isValid: (pos) => Boolean(INVERSE_POSITION[pos.id]),
+    getAnswer: (pos) => INVERSE_POSITION[pos.id],
+  }
+];
+
+const MAX_ATTEMPTS = 3;
+
 const clueSpan = document.getElementById("clue-text");
+const questionText = document.getElementById("question-text");
+const chipsContainer = document.getElementById("chips");
+const attemptsEl = document.getElementById("attempts");
 const feedback = document.getElementById("feedback");
 const board = document.getElementById("board");
-const dropZones = document.getElementById("drop-zones");
-const launchpad = document.querySelector(".launchpad");
 const ball = document.getElementById("draggable");
 const companionBall = document.getElementById("companion-ball");
 
-let zones = [];
-let currentTarget = null;
 let locked = false;
 let orbitInterval = null;
+let attemptsLeft = MAX_ATTEMPTS;
+let currentSituation = null;
 
 function randomChoice(arr) {
-  return arr[Math.floor(Math.random()*arr.length)];
-}
-
-function buildDropZones() {
-  dropZones.innerHTML = "";
-  zones = POSITIONS.map(pos => {
-    const el = document.createElement("div");
-    el.className = "drop-zone";
-    el.dataset.id = pos.id;
-    el.textContent = pos.label;
-    dropZones.appendChild(el);
-    return { id: pos.id, el, cx: 0, cy: 0 };
-  });
-  positionDropZones();
-}
-
-function positionDropZones() {
-  const rect = board.getBoundingClientRect();
-  zones.forEach(zone => {
-    const coords = POSITION_COORDS[zone.id];
-    zone.cx = (coords.x / 100) * rect.width;
-    zone.cy = (coords.y / 100) * rect.height;
-    zone.el.style.left = coords.x + "%";
-    zone.el.style.top = coords.y + "%";
-  });
-}
-
-function resetBall() {
-  locked = false;
-  ball.classList.remove("floating");
-  ball.style.left = "";
-  ball.style.top = "";
-  ball.style.transition = "";
-  launchpad.appendChild(ball);
-  companionBall.style.left = "50%";
-  companionBall.style.top = "40%";
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 function showFeedback(message, status = "") {
@@ -378,34 +398,22 @@ function setBoardMode(id) {
   board.classList.toggle("double-box", id === "artean");
 }
 
-function nearestZone(point) {
-  return zones.reduce((best, zone) => {
-    const dist = Math.hypot(point.x - zone.cx, point.y - zone.cy);
-    if (!best || dist < best.dist) return { zone, dist };
-    return best;
-  }, null);
-}
+function placeBall(positionId) {
+  const coords = POSITION_COORDS[positionId];
+  ball.style.left = coords.x + "%";
+  ball.style.top = coords.y + "%";
 
-function snapToZone(zone, animate = true) {
-  const rect = board.getBoundingClientRect();
-  const x = zone.cx;
-  const y = zone.cy;
-  ball.style.transition = animate ? "transform .2s ease, left .2s ease, top .2s ease" : "";
-  ball.style.left = x + "px";
-  ball.style.top = y + "px";
-  ball.classList.add("floating");
-  board.appendChild(ball);
+  companionBall.style.left = (100 - coords.x) + "%";
+  companionBall.style.top = (100 - coords.y + 6) + "%";
 
-  // Companion ball mirrored so kutxa geratzen da bien artean
-  const mirrorX = rect.width - x;
-  const mirrorY = rect.height - y + 30;
-  companionBall.style.left = mirrorX + "px";
-  companionBall.style.top = mirrorY + "px";
+  stopOrbit();
+  if (positionId === "inguruan") {
+    startOrbit();
+  }
 }
 
 function startOrbit() {
   clearInterval(orbitInterval);
-  if (currentTarget.id !== "inguruan") return;
   let angle = 0;
   orbitInterval = setInterval(() => {
     angle = (angle + 8) % 360;
@@ -423,82 +431,115 @@ function stopOrbit() {
   clearInterval(orbitInterval);
 }
 
-function newQuestion() {
-  stopOrbit();
-  zones.forEach(z => z.el.classList.remove("active"));
-  showFeedback("");
-  currentTarget = randomChoice(POSITIONS);
-  clueSpan.textContent = currentTarget.clue;
-  setBoardMode(currentTarget.id);
-  resetBall();
+function renderChips() {
+  chipsContainer.innerHTML = "";
+  POSITIONS.forEach(pos => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip";
+    chip.dataset.id = pos.id;
+    chip.textContent = pos.label;
+    chip.addEventListener("click", () => handleAnswer(pos.id));
+    chipsContainer.appendChild(chip);
+  });
 }
 
-function handleDrop(zone) {
-  stopOrbit();
-  snapToZone(zone);
-  if (locked) return;
+function resetChips() {
+  chipsContainer.querySelectorAll(".chip").forEach(chip => {
+    chip.classList.remove("selected", "correct", "locked");
+    chip.disabled = false;
+  });
+}
 
-  if (zone.id === currentTarget.id) {
+function setLockedChips() {
+  chipsContainer.querySelectorAll(".chip").forEach(chip => {
+    chip.classList.add("locked");
+    chip.disabled = true;
+  });
+}
+
+function updateAttempts() {
+  attemptsEl.textContent = `Saiakerak: ${attemptsLeft}/${MAX_ATTEMPTS}`;
+}
+
+function revealSolution() {
+  if (!currentSituation) return;
+  const correctChip = chipsContainer.querySelector(`[data-id="${currentSituation.correctId}"]`);
+  if (correctChip) {
+    correctChip.classList.add("correct");
+  }
+  showFeedback("🔍 Hona erantzun zuzena.");
+  locked = true;
+  setLockedChips();
+}
+
+function newQuestion() {
+  locked = false;
+  attemptsLeft = MAX_ATTEMPTS;
+  updateAttempts();
+  showFeedback("");
+
+  let position = randomChoice(POSITIONS);
+  let builder = randomChoice(QUESTION_BUILDERS.filter(q => q.isValid(position)));
+
+  // Baliteke lehen aukerak ez edukitzea alderantzizko galderarik; ziurtatu baliozkoa dela.
+  while (!builder) {
+    position = randomChoice(POSITIONS);
+    builder = randomChoice(QUESTION_BUILDERS.filter(q => q.isValid(position)));
+  }
+
+  currentSituation = {
+    position,
+    question: builder.prompt,
+    correctId: builder.getAnswer(position)
+  };
+
+  clueSpan.textContent = position.clue;
+  questionText.textContent = builder.prompt;
+  setBoardMode(position.id);
+  resetChips();
+  placeBall(position.id);
+}
+
+function handleAnswer(selectedId) {
+  if (locked || !currentSituation) return;
+
+  const chip = chipsContainer.querySelector(`[data-id="${selectedId}"]`);
+  if (chip) chip.classList.add("selected");
+
+  if (selectedId === currentSituation.correctId) {
     locked = true;
     showFeedback("✔️ Oso ongi!", "ok");
-    if (zone.id === "inguruan") startOrbit();
+    const correctChip = chipsContainer.querySelector(`[data-id="${currentSituation.correctId}"]`);
+    if (correctChip) correctChip.classList.add("correct");
+    setLockedChips();
   } else {
-    showFeedback("❌ Ez da hori.", "error");
-  }
-}
-
-function handleDrag() {
-  let dragging = false;
-
-  const pointerMove = (evt) => {
-    if (!dragging) return;
-    const rect = board.getBoundingClientRect();
-    const point = { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
-    ball.style.left = point.x + "px";
-    ball.style.top = point.y + "px";
-    ball.classList.add("floating");
-    board.appendChild(ball);
-
-    const nearest = nearestZone(point);
-    zones.forEach(z => z.el.classList.toggle("active", nearest && z.id === nearest.zone.id));
-  };
-
-  const pointerUp = (evt) => {
-    if (!dragging) return;
-    dragging = false;
-    window.removeEventListener("pointermove", pointerMove);
-    window.removeEventListener("pointerup", pointerUp);
-
-    const rect = board.getBoundingClientRect();
-    const point = { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
-    const nearest = nearestZone(point);
-    if (nearest) {
-      handleDrop(nearest.zone);
+    attemptsLeft -= 1;
+    if (attemptsLeft > 0) {
+      showFeedback(`❌ Ez da hori. Beste saiakera ${attemptsLeft} 🔁`, "error");
+      updateAttempts();
+    } else {
+      updateAttempts();
+      revealSolution();
     }
-  };
-
-  ball.addEventListener("pointerdown", (evt) => {
-    evt.preventDefault();
-    dragging = true;
-    ball.style.transition = "";
-    window.addEventListener("pointermove", pointerMove);
-    window.addEventListener("pointerup", pointerUp);
-  });
+  }
 }
 
 document.getElementById("next-btn").addEventListener("click", newQuestion);
 
 document.getElementById("show-solution-btn").addEventListener("click", () => {
-  const zone = zones.find(z => z.id === currentTarget.id);
-  if (zone) {
-    handleDrop(zone);
+  if (!locked) {
+    revealSolution();
   }
 });
 
-window.addEventListener("resize", positionDropZones);
+window.addEventListener("resize", () => {
+  if (currentSituation) {
+    placeBall(currentSituation.position.id);
+  }
+});
 
-buildDropZones();
-handleDrag();
+renderChips();
 newQuestion();
 
 </script>
