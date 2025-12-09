@@ -62,85 +62,54 @@
     .board-wrapper {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
 
     .board {
       position: relative;
       width: 100%;
       aspect-ratio: 1 / 1;
-      max-width: 380px;
+      max-width: 420px;
       margin: 0 auto;
-      background: radial-gradient(circle at top, #1f2937, #020617);
+      background: radial-gradient(160% 160% at 20% 10%, rgba(79,70,229,.4), rgba(15,23,42,1)),
+                  radial-gradient(circle at 80% 80%, rgba(14,165,233,.25), rgba(2,6,23,.6));
       border-radius: 20px;
       border: 1px solid rgba(148, 163, 184, 0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px;
-      box-sizing: border-box;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.75);
       overflow: hidden;
-      transition: all .2s ease-out;
+      transform: perspective(680px) rotateX(14deg);
+      transform-style: preserve-3d;
+    }
+
+    .shadow {
+      position: absolute;
+      inset: 10% 8% 16% 8%;
+      background: radial-gradient(ellipse at center, rgba(15, 23, 42, 0.85), rgba(2,6,23,0.2));
+      filter: blur(16px);
+      transform: translateZ(-40px);
     }
 
     .reference {
-      background: rgba(15, 23, 42, 0.9);
-      border-radius: 14px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 110px;
+      height: 110px;
+      transform: translate(-50%, -50%) rotateX(4deg);
+      background: linear-gradient(145deg, rgba(226,232,240,0.08), rgba(51,65,85,0.9));
+      border-radius: 18px;
       border: 1px solid rgba(249, 250, 251, 0.2);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-weight: 600;
-      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      font-size: 0.95rem;
       text-align: center;
-      padding: 10px 12px;
       color: #e5e7eb;
-      z-index: 1;
-    }
-
-    .reference span {
-      display: block;
-      font-size: 0.7rem;
-      font-weight: 400;
-      color: #9ca3af;
-      margin-top: 2px;
-    }
-
-    .pos-indicator {
-      position: absolute;
-      width: 40px;
-      height: 40px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 20%, #f9fafb, #6366f1);
-      border: 2px solid rgba(191, 219, 254, 0.9);
-      box-shadow: 0 10px 18px rgba(79, 70, 229, 0.65);
-      transition: all 0.22s ease-out;
-      pointer-events: none;
-    }
-
-    /* Posizioak */
-    .board.pos-gainean  .pos-indicator { top: 20%; left: 50%; transform: translate(-50%, -50%); }
-    .board.pos-aurrean  .pos-indicator { top: 32%; left: 50%; transform: translate(-50%, -50%); }
-    .board.pos-atzean   .pos-indicator { top: 70%; left: 50%; transform: translate(-50%, -50%); }
-    .board.pos-azpian   .pos-indicator { bottom: 20%; left: 50%; transform: translate(-50%, 50%); }
-    .board.pos-ezkerrean .pos-indicator { left: 15%; top: 50%; transform: translate(-50%, -50%); }
-    .board.pos-eskuinean .pos-indicator { right: 15%; top: 50%; transform: translate(50%, -50%); }
-    .board.pos-ondoan   .pos-indicator { right: 10%; top: 55%; transform: translate(50%, -50%); }
-    .board.pos-barruan  .pos-indicator { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.85); }
-    .board.pos-kanpoan  .pos-indicator { top: 10%; left: 10%; transform: translate(-50%, -50%); }
-
-    .board.pos-inguruan .pos-indicator {
-      animation: orbit 3s linear infinite;
-      transform-origin: center;
-    }
-
-    @keyframes orbit {
-      0%   { top: 10%;  left: 50%; }
-      25%  { top: 50%;  left: 90%; }
-      50%  { top: 90%;  left: 50%; }
-      75%  { top: 50%;  left: 10%; }
-      100% { top: 10%;  left: 50%; }
+      box-shadow: 0 12px 24px rgba(0,0,0,0.35);
+      transform-style: preserve-3d;
     }
 
     .board.double-box::after {
@@ -148,57 +117,104 @@
       position: absolute;
       top: 50%;
       right: 12%;
-      transform: translate(50%, -50%);
+      transform: translate(50%, -50%) rotateX(6deg);
       padding: 8px 10px;
       font-size: 0.8rem;
-      color: #9ca3af;
+      color: #cbd5e1;
       border-radius: 12px;
       border: 1px dashed rgba(148, 163, 184, 0.6);
-      background: rgba(15, 23, 42, 0.7);
+      background: rgba(15, 23, 42, 0.5);
+      box-shadow: 0 12px 20px rgba(0,0,0,0.25);
     }
 
-    .board.pos-artean .pos-indicator {
-      top: 50%;
-      left: 70%;
-      transform: translate(-50%, -50%);
+    .reference span {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 400;
+      color: #cbd5e1;
+      margin-top: 2px;
     }
 
-    .options {
-      margin-top: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
+    #drop-zones {
+      position: absolute;
+      inset: 0;
     }
 
-    .option-chip {
-      padding: 6px 12px;
-      border-radius: 999px;
+    .drop-zone {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
       border: 1px dashed rgba(148, 163, 184, 0.6);
-      font-size: 0.8rem;
-      color: #e5e7eb;
-      background: rgba(15, 23, 42, 0.9);
-      touch-action: manipulation;
-      transition: background .2s, border .2s;
-      box-sizing: border-box;
+      display: grid;
+      place-items: center;
+      color: #cbd5e1;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      pointer-events: none;
+      box-shadow: inset 0 0 18px rgba(59,130,246,0.12);
+      backdrop-filter: blur(4px);
+      background: rgba(15,23,42,0.45);
     }
 
-    .option-chip.correct {
-      background: rgba(22,163,74,0.25);
-      border-color: #4ade80;
+    .drop-zone::after {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      border-radius: 50%;
+      border: 1px solid rgba(94, 234, 212, 0.28);
+      opacity: 0;
+      transition: opacity .2s ease;
     }
 
-    .option-chip.wrong {
-      animation: shake .2s linear 2;
-      border-color: #ef4444;
+    .drop-zone.active::after {
+      opacity: 1;
     }
 
-    @keyframes shake {
-      0% { transform: translateX(0); }
-      25% { transform: translateX(-3px); }
-      50% { transform: translateX(3px); }
-      75% { transform: translateX(-3px); }
-      100% { transform: translateX(0); }
+    .ball, .companion-ball {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 20%, #f9fafb, #22d3ee);
+      box-shadow: 0 14px 26px rgba(14, 165, 233, 0.4);
+      position: absolute;
+      transform: translate(-50%, -50%);
+      touch-action: none;
+    }
+
+    .ball {
+      cursor: grab;
+      border: 2px solid rgba(226,232,240,0.9);
+      z-index: 2;
+      transition: box-shadow .2s ease;
+    }
+
+    .ball:active { cursor: grabbing; box-shadow: 0 18px 36px rgba(14, 165, 233, 0.6); }
+
+    .companion-ball {
+      background: radial-gradient(circle at 30% 20%, #ede9fe, #a78bfa);
+      border: 2px solid rgba(233, 213, 255, 0.85);
+      opacity: 0.6;
+      z-index: 1;
+    }
+
+    .launchpad {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px dashed rgba(148, 163, 184, 0.4);
+      border-radius: 12px;
+      padding: 10px;
+      display: grid;
+      gap: 6px;
+      color: #cbd5e1;
+      font-size: 0.85rem;
+      position: relative;
+    }
+
+    .launchpad .ball {
+      position: relative;
+      transform: none;
+      left: unset;
+      top: unset;
     }
 
     .feedback {
@@ -238,7 +254,7 @@
 <main class="game">
 
   <h1>Posizioak euskaraz (A1)</h1>
-  <p class="subtitle">Aukeratu posizio zuzena irudian.</p>
+  <p class="subtitle">Arrastatu pilota esaldian deskribatutako posiziora.</p>
 
   <div class="clue">
     Esaldia: <span id="clue-text"></span>
@@ -246,15 +262,19 @@
 
   <div class="board-wrapper">
     <div id="board" class="board">
-      <div class="reference">
+      <div class="reference" aria-hidden="true">
         KUTXA
         <span>(erreferentzia)</span>
       </div>
-      <div class="pos-indicator" aria-hidden="true"></div>
+      <div id="drop-zones" aria-hidden="true"></div>
+      <div class="shadow" aria-hidden="true"></div>
+      <div id="companion-ball" class="companion-ball" aria-hidden="true"></div>
+    </div>
+    <div class="launchpad">
+      <p>Arrastatu pilota kokalekuan jartzeko. Bigarren pilota morea automatikoki kokatuko da, kutxa bien artean geratzeko.</p>
+      <div id="draggable" class="ball" role="button" aria-label="Arrastatu pilota"></div>
     </div>
   </div>
-
-  <div id="options" class="options"></div>
 
   <div id="feedback" class="feedback" aria-live="polite"></div>
 
@@ -268,103 +288,217 @@
 <script>
 
 const POSITIONS = [
-  { id:"gainean",   label:"gainean",   clue:"Kutxaren gainean dago." },
-  { id:"azpian",    label:"azpian",    clue:"Kutxaren azpian dago." },
-  { id:"aurrean",   label:"aurrean",   clue:"Kutxaren aurrean dago." },
-  { id:"atzean",    label:"atzean",    clue:"Kutxaren atzean dago." },
-  { id:"eskuinean", label:"eskuinean", clue:"Kutxaren eskuinean dago." },
-  { id:"ezkerrean", label:"ezkerrean", clue:"Kutxaren ezkerrean dago." },
-  { id:"ondoan",    label:"ondoan",    clue:"Kutxaren ondoan dago." },
-  { id:"artean",    label:"artean",    clue:"Bi kutxen artean dago." },
-  { id:"barruan",   label:"barruan",   clue:"Kutxaren barruan dago." },
-  { id:"kanpoan",   label:"kanpoan",   clue:"Kutxaren kanpoan dago." },
-  { id:"inguruan",  label:"inguruan",  clue:"Kutxaren inguruan dago." },
+  { id:"gainean",   label:"Gainean",   clue:"Kutxaren gainean dago." },
+  { id:"azpian",    label:"Azpian",    clue:"Kutxaren azpian dago." },
+  { id:"aurrean",   label:"Aurrealdean",   clue:"Kutxaren aurrean dago." },
+  { id:"atzean",    label:"Atzean",    clue:"Kutxaren atzean dago." },
+  { id:"eskuinean", label:"Eskuinean", clue:"Kutxaren eskuinean dago." },
+  { id:"ezkerrean", label:"Ezkerrean", clue:"Kutxaren ezkerrean dago." },
+  { id:"ondoan",    label:"Ondoan",    clue:"Kutxaren ondoan dago." },
+  { id:"artean",    label:"Artean",    clue:"Bi punturen artean, kutxaren eskuin aldean." },
+  { id:"erdian",    label:"Erdian",    clue:"Bi pilotaren artean erdian dago." },
+  { id:"barruan",   label:"Barruan",   clue:"Kutxaren barruan dago." },
+  { id:"kanpoan",   label:"Kanpoan",   clue:"Kutxaren kanpoan dago." },
+  { id:"inguruan",  label:"Inguruan",  clue:"Kutxaren inguruan biraka." },
 ];
+
+const POSITION_COORDS = {
+  gainean:    { x: 50, y: 18 },
+  aurrean:    { x: 50, y: 30 },
+  atzean:     { x: 50, y: 70 },
+  azpian:     { x: 50, y: 82 },
+  eskuinean:  { x: 77, y: 52 },
+  ezkerrean:  { x: 23, y: 52 },
+  ondoan:     { x: 68, y: 60 },
+  artean:     { x: 70, y: 52 },
+  erdian:     { x: 50, y: 44 },
+  barruan:    { x: 50, y: 56 },
+  kanpoan:    { x: 15, y: 15 },
+  inguruan:   { x: 50, y: 10 },
+};
 
 const clueSpan = document.getElementById("clue-text");
 const feedback = document.getElementById("feedback");
-const optionsDiv = document.getElementById("options");
 const board = document.getElementById("board");
+const dropZones = document.getElementById("drop-zones");
+const launchpad = document.querySelector(".launchpad");
+const ball = document.getElementById("draggable");
+const companionBall = document.getElementById("companion-ball");
 
-let optionElements = [];
+let zones = [];
 let currentTarget = null;
 let locked = false;
+let orbitInterval = null;
 
 function randomChoice(arr) {
   return arr[Math.floor(Math.random()*arr.length)];
 }
 
-function clearBoard() {
-  board.className = "board";
+function buildDropZones() {
+  dropZones.innerHTML = "";
+  zones = POSITIONS.map(pos => {
+    const el = document.createElement("div");
+    el.className = "drop-zone";
+    el.dataset.id = pos.id;
+    el.textContent = pos.label;
+    dropZones.appendChild(el);
+    return { id: pos.id, el, cx: 0, cy: 0 };
+  });
+  positionDropZones();
 }
 
-function setBoardPosition(id) {
-  clearBoard();
-  if (id === "artean") board.classList.add("double-box");
-  board.classList.add("pos-" + id);
-}
-
-function initOptions() {
-  optionsDiv.innerHTML = "";
-  optionElements = [];
-
-  POSITIONS.forEach(pos => {
-    const chip = document.createElement("div");
-    chip.className = "option-chip";
-    chip.dataset.id = pos.id;
-    chip.textContent = pos.label;
-
-    chip.addEventListener("click", () => handleClick(chip, pos.id));
-
-    optionsDiv.appendChild(chip);
-    optionElements.push(chip);
+function positionDropZones() {
+  const rect = board.getBoundingClientRect();
+  zones.forEach(zone => {
+    const coords = POSITION_COORDS[zone.id];
+    zone.cx = (coords.x / 100) * rect.width;
+    zone.cy = (coords.y / 100) * rect.height;
+    zone.el.style.left = coords.x + "%";
+    zone.el.style.top = coords.y + "%";
   });
 }
 
-function newQuestion() {
-  optionElements.forEach(o => o.classList.remove("correct","wrong"));
-  feedback.textContent = "";
-  feedback.className = "feedback";
-  clearBoard();
+function resetBall() {
   locked = false;
-
-  currentTarget = randomChoice(POSITIONS);
-  clueSpan.textContent = currentTarget.clue;
+  ball.classList.remove("floating");
+  ball.style.left = "";
+  ball.style.top = "";
+  ball.style.transition = "";
+  launchpad.appendChild(ball);
+  companionBall.style.left = "50%";
+  companionBall.style.top = "40%";
 }
 
-function handleClick(chip, chosenId) {
+function showFeedback(message, status = "") {
+  feedback.textContent = message;
+  feedback.className = "feedback" + (status ? " " + status : "");
+}
 
-  // Always show the clicked position visually
-  setBoardPosition(chosenId);
+function setBoardMode(id) {
+  board.classList.toggle("double-box", id === "artean");
+}
 
+function nearestZone(point) {
+  return zones.reduce((best, zone) => {
+    const dist = Math.hypot(point.x - zone.cx, point.y - zone.cy);
+    if (!best || dist < best.dist) return { zone, dist };
+    return best;
+  }, null);
+}
+
+function snapToZone(zone, animate = true) {
+  const rect = board.getBoundingClientRect();
+  const x = zone.cx;
+  const y = zone.cy;
+  ball.style.transition = animate ? "transform .2s ease, left .2s ease, top .2s ease" : "";
+  ball.style.left = x + "px";
+  ball.style.top = y + "px";
+  ball.classList.add("floating");
+  board.appendChild(ball);
+
+  // Companion ball mirrored so kutxa geratzen da bien artean
+  const mirrorX = rect.width - x;
+  const mirrorY = rect.height - y + 30;
+  companionBall.style.left = mirrorX + "px";
+  companionBall.style.top = mirrorY + "px";
+}
+
+function startOrbit() {
+  clearInterval(orbitInterval);
+  if (currentTarget.id !== "inguruan") return;
+  let angle = 0;
+  orbitInterval = setInterval(() => {
+    angle = (angle + 8) % 360;
+    const rect = board.getBoundingClientRect();
+    const radius = rect.width * 0.35;
+    const center = { x: rect.width / 2, y: rect.height / 2 };
+    const rad = angle * Math.PI / 180;
+    const point = { x: center.x + Math.cos(rad) * radius, y: center.y + Math.sin(rad) * radius * 0.75 };
+    ball.style.left = point.x + "px";
+    ball.style.top = point.y + "px";
+  }, 80);
+}
+
+function stopOrbit() {
+  clearInterval(orbitInterval);
+}
+
+function newQuestion() {
+  stopOrbit();
+  zones.forEach(z => z.el.classList.remove("active"));
+  showFeedback("");
+  currentTarget = randomChoice(POSITIONS);
+  clueSpan.textContent = currentTarget.clue;
+  setBoardMode(currentTarget.id);
+  resetBall();
+}
+
+function handleDrop(zone) {
+  stopOrbit();
+  snapToZone(zone);
   if (locked) return;
 
-  if (chosenId === currentTarget.id) {
-    chip.classList.add("correct");
-    feedback.textContent = "✔️ Oso ongi!";
-    feedback.className = "feedback ok";
+  if (zone.id === currentTarget.id) {
     locked = true;
+    showFeedback("✔️ Oso ongi!", "ok");
+    if (zone.id === "inguruan") startOrbit();
   } else {
-    chip.classList.add("wrong");
-    feedback.textContent = "❌ Ez da hori.";
-    feedback.className = "feedback error";
-    setTimeout(()=>chip.classList.remove("wrong"),250);
+    showFeedback("❌ Ez da hori.", "error");
   }
+}
+
+function handleDrag() {
+  let dragging = false;
+
+  const pointerMove = (evt) => {
+    if (!dragging) return;
+    const rect = board.getBoundingClientRect();
+    const point = { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
+    ball.style.left = point.x + "px";
+    ball.style.top = point.y + "px";
+    ball.classList.add("floating");
+    board.appendChild(ball);
+
+    const nearest = nearestZone(point);
+    zones.forEach(z => z.el.classList.toggle("active", nearest && z.id === nearest.zone.id));
+  };
+
+  const pointerUp = (evt) => {
+    if (!dragging) return;
+    dragging = false;
+    window.removeEventListener("pointermove", pointerMove);
+    window.removeEventListener("pointerup", pointerUp);
+
+    const rect = board.getBoundingClientRect();
+    const point = { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
+    const nearest = nearestZone(point);
+    if (nearest) {
+      handleDrop(nearest.zone);
+    }
+  };
+
+  ball.addEventListener("pointerdown", (evt) => {
+    evt.preventDefault();
+    dragging = true;
+    ball.style.transition = "";
+    window.addEventListener("pointermove", pointerMove);
+    window.addEventListener("pointerup", pointerUp);
+  });
 }
 
 document.getElementById("next-btn").addEventListener("click", newQuestion);
 
 document.getElementById("show-solution-btn").addEventListener("click", () => {
-  setBoardPosition(currentTarget.id);
-
-  const correctChip = optionElements.find(c => c.dataset.id === currentTarget.id);
-  correctChip.classList.add("correct");
-
-  feedback.textContent = "💡 Soluzioa: " + currentTarget.label;
-  feedback.className = "feedback";
+  const zone = zones.find(z => z.id === currentTarget.id);
+  if (zone) {
+    handleDrop(zone);
+  }
 });
 
-initOptions();
+window.addEventListener("resize", positionDropZones);
+
+buildDropZones();
+handleDrag();
 newQuestion();
 
 </script>
