@@ -1,22 +1,403 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="eu">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="This is the GitHub Pages site for the Lekua-Jokoa project.">
-    <title>Lekua Jokoa</title>
+  <meta charset="UTF-8" />
+  <title>Posizioak Euskaraz - Drag & Drop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .game {
+      background: #020617;
+      border-radius: 16px;
+      padding: 20px 20px 24px;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 1.4rem;
+      text-align: center;
+    }
+
+    .subtitle {
+      margin: 0 0 16px;
+      font-size: 0.9rem;
+      text-align: center;
+      color: #9ca3af;
+    }
+
+    .clue {
+      background: rgba(15, 118, 110, 0.2);
+      border: 1px solid rgba(45, 212, 191, 0.4);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .clue span {
+      font-weight: 600;
+      color: #a5b4fc;
+    }
+
+    .board-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .board {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-width: 420px;
+      margin: 0 auto;
+      background: radial-gradient(circle at top, #1f2937, #020617);
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .reference {
+      grid-column: 2;
+      grid-row: 2;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 14px;
+      border: 1px solid rgba(249, 250, 251, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-align: center;
+      padding: 8px;
+    }
+
+    .reference span {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+
+    .drop-zone {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      font-size: 0.9rem;
+      text-align: center;
+      border-radius: 999px;
+      border: 1px dashed rgba(148, 163, 184, 0.5);
+      color: #cbd5f5;
+      box-sizing: border-box;
+      transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+    }
+
+    .drop-zone[data-pos="azpian"]   { grid-column: 2; grid-row: 3; }
+    .drop-zone[data-pos="parean"]   { grid-column: 2; grid-row: 1; }
+    .drop-zone[data-pos="ezkerrean"]{ grid-column: 1; grid-row: 2; }
+    .drop-zone[data-pos="eskuinean"]{ grid-column: 3; grid-row: 2; }
+
+    .drop-zone.highlight {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: #60a5fa;
+      transform: translateY(-1px);
+    }
+
+    .drop-zone.correct {
+      background: rgba(22, 163, 74, 0.2);
+      border-color: #4ade80;
+    }
+
+    .drop-zone.wrong {
+      animation: shake 0.18s linear 2;
+      border-color: #f97373;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-2px); }
+      50% { transform: translateX(2px); }
+      75% { transform: translateX(-2px); }
+      100% { transform: translateX(0); }
+    }
+
+    .piece-start-area {
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+
+    .piece {
+      width: 46px;
+      height: 46px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #f9fafb, #6366f1);
+      border: 2px solid rgba(191, 219, 254, 0.8);
+      box-shadow: 0 10px 18px rgba(79, 70, 229, 0.6);
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .piece[draggable="false"] {
+      cursor: default;
+      opacity: 0.7;
+      box-shadow: none;
+    }
+
+    .feedback {
+      margin-top: 12px;
+      min-height: 20px;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .feedback.ok {
+      color: #4ade80;
+    }
+
+    .feedback.error {
+      color: #f97373;
+    }
+
+    .controls {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: linear-gradient(90deg, #6366f1, #14b8a6);
+      color: #f9fafb;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button.secondary {
+      background: transparent;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      color: #e5e7eb;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    @media (max-width: 480px) {
+      .game {
+        padding: 16px 14px 18px;
+      }
+      .board {
+        max-width: 360px;
+      }
+      .drop-zone {
+        font-size: 0.78rem;
+        padding: 4px;
+      }
+      .reference {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to Lekua Jokoa</h1>
-    </header>
+  <main class="game">
+    <h1>Posizioak euskaraz</h1>
+    <p class="subtitle">
+      Arrastra la ficha al <strong>lugar correcto</strong> según la frase en castellano.
+    </p>
 
-    <main>
-        <p>This is the placeholder content for the GitHub Pages site for the project. Feel free to edit and customize it as needed!</p>
-    </main>
+    <div class="clue">
+      Coloca la ficha donde esté: <span id="clue-text"></span>
+    </div>
 
-    <footer>
-        <p>&copy; 2025 Lekua Jokoa Team</p>
-    </footer>
+    <div class="board-wrapper">
+      <div class="board">
+        <!-- Zonas de caída -->
+        <div class="drop-zone" data-pos="parean">Parean</div>
+        <div class="drop-zone" data-pos="azpian">Azpian</div>
+        <div class="drop-zone" data-pos="ezkerrean">Ezkerrean</div>
+        <div class="drop-zone" data-pos="eskuinean">Eskuinean</div>
+
+        <!-- Referencia central -->
+        <div class="reference">
+          KUTXA
+          <span>(la caja)</span>
+        </div>
+      </div>
+
+      <div class="piece-start-area">
+        <div id="piece" class="piece" draggable="true"></div>
+        <span>Arrastra la ficha morada a la posición correcta.</span>
+      </div>
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+
+    <div class="controls">
+      <button id="next-btn">Siguiente frase</button>
+      <button id="show-solution-btn" class="secondary">Ver solución</button>
+    </div>
+  </main>
+
+  <script>
+    // Configuración de posiciones: euskera + explicación en castellano
+    const POSITIONS = [
+      {
+        id: "azpian",
+        basque: "Azpian",
+        clueEs: "debajo de la caja",
+      },
+      {
+        id: "parean",
+        basque: "Parean",
+        clueEs: "delante de la caja / enfrente",
+      },
+      {
+        id: "ezkerrean",
+        basque: "Ezkerrean",
+        clueEs: "a la izquierda de la caja",
+      },
+      {
+        id: "eskuinean",
+        basque: "Eskuinean",
+        clueEs: "a la derecha de la caja",
+      },
+    ];
+
+    const clueSpan = document.getElementById("clue-text");
+    const feedbackEl = document.getElementById("feedback");
+    const piece = document.getElementById("piece");
+    const dropZones = Array.from(document.querySelectorAll(".drop-zone"));
+    const nextBtn = document.getElementById("next-btn");
+    const solutionBtn = document.getElementById("show-solution-btn");
+
+    let currentTarget = null;
+    let gameLocked = false;
+
+    function randomChoice(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function setNewClue() {
+      // Reset estado visual
+      dropZones.forEach(z => {
+        z.classList.remove("highlight", "correct", "wrong");
+      });
+      feedbackEl.textContent = "";
+      feedbackEl.className = "feedback";
+
+      // Activar de nuevo el arrastre
+      piece.setAttribute("draggable", "true");
+      gameLocked = false;
+
+      // Elegir nueva posición objetivo
+      currentTarget = randomChoice(POSITIONS);
+      clueSpan.textContent = currentTarget.clueEs + " → (" + currentTarget.basque + ")";
+    }
+
+    // Drag & Drop
+    piece.addEventListener("dragstart", (e) => {
+      if (gameLocked) {
+        e.preventDefault();
+        return;
+      }
+      e.dataTransfer.setData("text/plain", "piece");
+      dropZones.forEach(z => z.classList.add("highlight"));
+    });
+
+    piece.addEventListener("dragend", () => {
+      dropZones.forEach(z => z.classList.remove("highlight"));
+    });
+
+    dropZones.forEach(zone => {
+      zone.addEventListener("dragover", (e) => {
+        e.preventDefault(); // Necesario para permitir drop
+      });
+
+      zone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        if (gameLocked) return;
+
+        const data = e.dataTransfer.getData("text/plain");
+        if (data !== "piece") return;
+
+        const chosenId = zone.getAttribute("data-pos");
+        checkAnswer(zone, chosenId);
+      });
+    });
+
+    function checkAnswer(zone, chosenId) {
+      if (!currentTarget) return;
+
+      if (chosenId === currentTarget.id) {
+        zone.classList.add("correct");
+        feedbackEl.textContent = "✅ ¡Muy bien! \"" + currentTarget.basque + "\" es " + currentTarget.clueEs + ".";
+        feedbackEl.classList.add("ok");
+        gameLocked = true;
+        piece.setAttribute("draggable", "false");
+      } else {
+        zone.classList.add("wrong");
+        feedbackEl.textContent = "❌ No es esa posición. Intenta de nuevo.";
+        feedbackEl.classList.add("error");
+        setTimeout(() => {
+          zone.classList.remove("wrong");
+        }, 350);
+      }
+    }
+
+    nextBtn.addEventListener("click", setNewClue);
+
+    solutionBtn.addEventListener("click", () => {
+      if (!currentTarget) return;
+      dropZones.forEach(z => z.classList.remove("correct"));
+      const correctZone = dropZones.find(z => z.getAttribute("data-pos") === currentTarget.id);
+      if (correctZone) {
+        correctZone.classList.add("correct");
+      }
+      feedbackEl.textContent = "💡 Solución: " + currentTarget.basque + " (" + currentTarget.clueEs + ").";
+      feedbackEl.classList.remove("ok", "error");
+    });
+
+    // Primera frase al cargar
+    setNewClue();
+  </script>
 </body>
 </html>
