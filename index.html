@@ -196,6 +196,7 @@
       border: 2px solid rgba(233, 213, 255, 0.85);
       opacity: 0.6;
       z-index: 1;
+      display: none;
     }
 
     .launchpad {
@@ -403,8 +404,12 @@ function placeBall(positionId) {
   ball.style.left = coords.x + "%";
   ball.style.top = coords.y + "%";
 
-  companionBall.style.left = (100 - coords.x) + "%";
-  companionBall.style.top = (100 - coords.y + 6) + "%";
+  const showCompanion = positionId === "erdian";
+  companionBall.style.display = showCompanion ? "block" : "none";
+  if (showCompanion) {
+    companionBall.style.left = (100 - coords.x) + "%";
+    companionBall.style.top = (100 - coords.y + 6) + "%";
+  }
 
   stopOrbit();
   if (positionId === "inguruan") {
