@@ -44,21 +44,6 @@
       color: #9ca3af;
     }
 
-    .clue {
-      background: rgba(15, 118, 110, 0.2);
-      border: 1px solid rgba(45, 212, 191, 0.4);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 0.85rem;
-      text-align: center;
-      margin-bottom: 12px;
-    }
-
-    .clue span {
-      font-weight: 600;
-      color: #a5b4fc;
-    }
-
     .board-wrapper {
       display: flex;
       flex-direction: column;
@@ -281,10 +266,6 @@
   <h1>Posizioak euskaraz (A1)</h1>
   <p class="subtitle">Aukeratu txip batekin non dagoen pilota edo kutxa, ikusitako egoeran.</p>
 
-  <div class="clue">
-    Esaldia: <span id="clue-text"></span>
-  </div>
-
   <div class="board-wrapper">
     <div id="board" class="board">
       <div class="reference" aria-hidden="true">
@@ -323,7 +304,7 @@ const POSITIONS = [
   { id:"eskuinean", label:"Eskuinean", clue:"Kutxaren eskuinean dago." },
   { id:"ezkerrean", label:"Ezkerrean", clue:"Kutxaren ezkerrean dago." },
   { id:"ondoan",    label:"Ondoan",    clue:"Kutxaren ondoan dago." },
-  { id:"artean",    label:"Artean",    clue:"Bi punturen artean, kutxaren eskuin aldean." },
+  { id:"artean",    label:"Artean",    clue:"Bi kutxen artean dago." },
   { id:"erdian",    label:"Erdian",    clue:"Bi pilotaren artean erdian dago." },
   { id:"barruan",   label:"Barruan",   clue:"Kutxaren barruan dago." },
   { id:"kanpoan",   label:"Kanpoan",   clue:"Kutxaren kanpoan dago." },
@@ -372,7 +353,6 @@ const QUESTION_BUILDERS = [
 
 const MAX_ATTEMPTS = 3;
 
-const clueSpan = document.getElementById("clue-text");
 const questionText = document.getElementById("question-text");
 const chipsContainer = document.getElementById("chips");
 const attemptsEl = document.getElementById("attempts");
@@ -499,7 +479,6 @@ function newQuestion() {
     correctId: builder.getAnswer(position)
   };
 
-  clueSpan.textContent = position.clue;
   questionText.textContent = builder.prompt;
   setBoardMode(position.id);
   resetChips();
