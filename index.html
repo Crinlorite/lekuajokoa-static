@@ -2,7 +2,7 @@
 <html lang="eu">
 <head>
   <meta charset="UTF-8" />
-  <title>Posizioak Euskaraz (A1)</title>
+  <title>Posizioak euskaraz (A1)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -79,6 +79,8 @@
       justify-content: center;
       padding: 10px;
       box-sizing: border-box;
+      overflow: hidden;
+      transition: all .2s ease-out;
     }
 
     .reference {
@@ -92,8 +94,9 @@
       font-weight: 600;
       font-size: 0.9rem;
       text-align: center;
-      padding: 8px 10px;
+      padding: 10px 12px;
       color: #e5e7eb;
+      z-index: 1;
     }
 
     .reference span {
@@ -104,51 +107,60 @@
       margin-top: 2px;
     }
 
-    .piece-start-area {
-      margin-top: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      font-size: 0.8rem;
-      color: #9ca3af;
-      text-align: left;
-    }
-
-    .piece-wrapper {
-      position: relative;
-      width: 64px;
-      height: 64px;
-      flex-shrink: 0;
-    }
-
-    .piece {
-      width: 56px;
-      height: 56px;
+    .pos-indicator {
+      position: absolute;
+      width: 40px;
+      height: 40px;
       border-radius: 999px;
       background: radial-gradient(circle at 30% 20%, #f9fafb, #6366f1);
       border: 2px solid rgba(191, 219, 254, 0.9);
       box-shadow: 0 10px 18px rgba(79, 70, 229, 0.65);
-      cursor: grab;
-      touch-action: none; /* importante en móvil */
-      user-select: none;
+      transition: all 0.22s ease-out;
+      pointer-events: none;
+    }
+
+    /* Posizioak */
+    .board.pos-gainean  .pos-indicator { top: 20%; left: 50%; transform: translate(-50%, -50%); }
+    .board.pos-aurrean  .pos-indicator { top: 32%; left: 50%; transform: translate(-50%, -50%); }
+    .board.pos-atzean   .pos-indicator { top: 70%; left: 50%; transform: translate(-50%, -50%); }
+    .board.pos-azpian   .pos-indicator { bottom: 20%; left: 50%; transform: translate(-50%, 50%); }
+    .board.pos-ezkerrean .pos-indicator { left: 15%; top: 50%; transform: translate(-50%, -50%); }
+    .board.pos-eskuinean .pos-indicator { right: 15%; top: 50%; transform: translate(50%, -50%); }
+    .board.pos-ondoan   .pos-indicator { right: 10%; top: 55%; transform: translate(50%, -50%); }
+    .board.pos-barruan  .pos-indicator { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.85); }
+    .board.pos-kanpoan  .pos-indicator { top: 10%; left: 10%; transform: translate(-50%, -50%); }
+
+    .board.pos-inguruan .pos-indicator {
+      animation: orbit 3s linear infinite;
+      transform-origin: center;
+    }
+
+    @keyframes orbit {
+      0%   { top: 10%;  left: 50%; }
+      25%  { top: 50%;  left: 90%; }
+      50%  { top: 90%;  left: 50%; }
+      75%  { top: 50%;  left: 10%; }
+      100% { top: 10%;  left: 50%; }
+    }
+
+    .board.double-box::after {
+      content: "KUTXA";
       position: absolute;
-      left: 50%;
       top: 50%;
+      right: 12%;
+      transform: translate(50%, -50%);
+      padding: 8px 10px;
+      font-size: 0.8rem;
+      color: #9ca3af;
+      border-radius: 12px;
+      border: 1px dashed rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.7);
+    }
+
+    .board.pos-artean .pos-indicator {
+      top: 50%;
+      left: 70%;
       transform: translate(-50%, -50%);
-      transition: transform 0.15s ease-out;
-    }
-
-    .piece.dragging {
-      cursor: grabbing;
-      transition: none;
-    }
-
-    .piece.disabled {
-      opacity: 0.6;
-      box-shadow: none;
-      cursor: default;
-      touch-action: auto;
     }
 
     .options {
@@ -166,316 +178,195 @@
       font-size: 0.8rem;
       color: #e5e7eb;
       background: rgba(15, 23, 42, 0.9);
-      box-sizing: border-box;
       touch-action: manipulation;
-      user-select: none;
-      transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
-    }
-
-    .option-chip.highlight {
-      background: rgba(59, 130, 246, 0.18);
-      border-color: #60a5fa;
-      transform: translateY(-1px);
+      transition: background .2s, border .2s;
+      box-sizing: border-box;
     }
 
     .option-chip.correct {
-      background: rgba(22, 163, 74, 0.2);
+      background: rgba(22,163,74,0.25);
       border-color: #4ade80;
     }
 
     .option-chip.wrong {
-      animation: shake 0.18s linear 2;
-      border-color: #f97373;
+      animation: shake .2s linear 2;
+      border-color: #ef4444;
     }
 
     @keyframes shake {
       0% { transform: translateX(0); }
-      25% { transform: translateX(-2px); }
-      50% { transform: translateX(2px); }
-      75% { transform: translateX(-2px); }
+      25% { transform: translateX(-3px); }
+      50% { transform: translateX(3px); }
+      75% { transform: translateX(-3px); }
       100% { transform: translateX(0); }
     }
 
     .feedback {
       margin-top: 10px;
       min-height: 20px;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       text-align: center;
     }
 
-    .feedback.ok {
-      color: #4ade80;
-    }
-
-    .feedback.error {
-      color: #f97373;
-    }
+    .feedback.ok { color: #4ade80; }
+    .feedback.error { color: #f87171; }
 
     .controls {
       margin-top: 10px;
       display: flex;
       gap: 8px;
       justify-content: center;
-      flex-wrap: wrap;
     }
 
     button {
       border: none;
       border-radius: 999px;
       padding: 8px 14px;
-      font-size: 0.8rem;
-      font-weight: 500;
+      font-size: .85rem;
       cursor: pointer;
-      background: linear-gradient(90deg, #6366f1, #14b8a6);
-      color: #f9fafb;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      background: linear-gradient(90deg,#6366f1,#14b8a6);
+      color: white;
     }
 
     button.secondary {
       background: transparent;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      color: #e5e7eb;
-    }
-
-    button:active {
-      transform: translateY(1px);
-    }
-
-    @media (min-width: 600px) {
-      .game {
-        padding: 20px 20px 22px;
-      }
-      .board {
-        max-width: 420px;
-      }
-      .reference {
-        font-size: 1rem;
-      }
-      .option-chip {
-        font-size: 0.85rem;
-      }
+      border: 1px solid rgba(148,163,184,.7);
     }
   </style>
 </head>
 <body>
-  <main class="game">
-    <h1>Posizioak euskaraz (A1)</h1>
-    <p class="subtitle">
-      Cada frase trabaja <strong>una postposición de lugar</strong>. Arrastra la ficha o toca la opción correcta.
-    </p>
+<main class="game">
 
-    <div class="clue">
-      Coloca la ficha: <span id="clue-text"></span>
-    </div>
+  <h1>Posizioak euskaraz (A1)</h1>
+  <p class="subtitle">Aukeratu posizio zuzena irudian.</p>
 
-    <div class="board-wrapper">
-      <div class="board">
-        <div class="reference">
-          KUTXA
-          <span>(la caja de referencia)</span>
-        </div>
+  <div class="clue">
+    Esaldia: <span id="clue-text"></span>
+  </div>
+
+  <div class="board-wrapper">
+    <div id="board" class="board">
+      <div class="reference">
+        KUTXA
+        <span>(erreferentzia)</span>
       </div>
-
-      <div class="piece-start-area">
-        <div class="piece-wrapper">
-          <div id="piece" class="piece"></div>
-        </div>
-        <span>
-          Arrastra la ficha morada sobre el <strong>chip</strong> correcto
-          o toca directamente el chip para responder.
-        </span>
-      </div>
+      <div class="pos-indicator" aria-hidden="true"></div>
     </div>
+  </div>
 
-    <div id="options" class="options"></div>
+  <div id="options" class="options"></div>
 
-    <div id="feedback" class="feedback"></div>
+  <div id="feedback" class="feedback" aria-live="polite"></div>
 
-    <div class="controls">
-      <button id="next-btn">Siguiente frase</button>
-      <button id="show-solution-btn" class="secondary">Ver solución</button>
-    </div>
-  </main>
+  <div class="controls">
+    <button id="next-btn">Hurrengoa</button>
+    <button id="show-solution-btn" class="secondary">Erakutsi soluzioa</button>
+  </div>
 
-  <script>
-    // --- Lista de postposiciones de lugar A1 ---
-    // Puedes quitar / añadir / ajustar las frases en castellano.
-    const POSITIONS = [
-      { id: "gainean",   label: "Gainean",   clueEs: "encima de la caja / sobre la caja" },
-      { id: "azpian",    label: "Azpian",    clueEs: "debajo de la caja" },
-      { id: "aurrean",   label: "Aurrean",   clueEs: "delante de la caja" },
-      { id: "atzean",    label: "Atzean",    clueEs: "detrás de la caja" },
-      { id: "eskuinean", label: "Eskuinean", clueEs: "a la derecha de la caja" },
-      { id: "ezkerrean", label: "Ezkerrean", clueEs: "a la izquierda de la caja" },
-      { id: "ondoan",    label: "Ondoan",    clueEs: "al lado de la caja / junto a la caja" },
-      { id: "artean",    label: "Artesn",    clueEs: "entre dos cajas" },
-      { id: "barruan",   label: "Barruan",   clueEs: "dentro de la caja" },
-      { id: "kanpoan",   label: "Kanpoan",   clueEs: "fuera de la caja" },
-      { id: "inguruan",  label: "Inguruan",  clueEs: "alrededor de la caja" },
-    ];
+</main>
 
-    const clueSpan      = document.getElementById("clue-text");
-    const feedbackEl    = document.getElementById("feedback");
-    const piece         = document.getElementById("piece");
-    const optionsDiv    = document.getElementById("options");
-    const nextBtn       = document.getElementById("next-btn");
-    const solutionBtn   = document.getElementById("show-solution-btn");
+<script>
 
-    let optionElements = [];
-    let currentTarget = null;
-    let gameLocked = false;
+const POSITIONS = [
+  { id:"gainean",   label:"gainean",   clue:"Kutxaren gainean dago." },
+  { id:"azpian",    label:"azpian",    clue:"Kutxaren azpian dago." },
+  { id:"aurrean",   label:"aurrean",   clue:"Kutxaren aurrean dago." },
+  { id:"atzean",    label:"atzean",    clue:"Kutxaren atzean dago." },
+  { id:"eskuinean", label:"eskuinean", clue:"Kutxaren eskuinean dago." },
+  { id:"ezkerrean", label:"ezkerrean", clue:"Kutxaren ezkerrean dago." },
+  { id:"ondoan",    label:"ondoan",    clue:"Kutxaren ondoan dago." },
+  { id:"artean",    label:"artean",    clue:"Bi kutxen artean dago." },
+  { id:"barruan",   label:"barruan",   clue:"Kutxaren barruan dago." },
+  { id:"kanpoan",   label:"kanpoan",   clue:"Kutxaren kanpoan dago." },
+  { id:"inguruan",  label:"inguruan",  clue:"Kutxaren inguruan dago." },
+];
 
-    // Drag táctil / ratón con pointer events
-    let dragging = false;
-    let startClientX = 0;
-    let startClientY = 0;
-    let currentDX = 0;
-    let currentDY = 0;
+const clueSpan = document.getElementById("clue-text");
+const feedback = document.getElementById("feedback");
+const optionsDiv = document.getElementById("options");
+const board = document.getElementById("board");
 
-    function randomChoice(arr) {
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
+let optionElements = [];
+let currentTarget = null;
+let locked = false;
 
-    function resetPiecePosition() {
-      piece.style.transform = "translate(-50%, -50%)";
-      currentDX = 0;
-      currentDY = 0;
-    }
+function randomChoice(arr) {
+  return arr[Math.floor(Math.random()*arr.length)];
+}
 
-    function initOptions() {
-      optionsDiv.innerHTML = "";
-      optionElements = [];
+function clearBoard() {
+  board.className = "board";
+}
 
-      POSITIONS.forEach(pos => {
-        const chip = document.createElement("div");
-        chip.className = "option-chip";
-        chip.dataset.id = pos.id;
-        chip.textContent = pos.label;
+function setBoardPosition(id) {
+  clearBoard();
+  if (id === "artean") board.classList.add("double-box");
+  board.classList.add("pos-" + id);
+}
 
-        chip.addEventListener("click", () => {
-          if (gameLocked) return;
-          checkAnswer(chip, pos.id);
-        });
+function initOptions() {
+  optionsDiv.innerHTML = "";
+  optionElements = [];
 
-        optionsDiv.appendChild(chip);
-        optionElements.push(chip);
-      });
-    }
+  POSITIONS.forEach(pos => {
+    const chip = document.createElement("div");
+    chip.className = "option-chip";
+    chip.dataset.id = pos.id;
+    chip.textContent = pos.label;
 
-    function setNewClue() {
-      optionElements.forEach(chip => chip.classList.remove("highlight", "correct", "wrong"));
-      feedbackEl.textContent = "";
-      feedbackEl.className = "feedback";
-      gameLocked = false;
-      piece.classList.remove("disabled");
-      resetPiecePosition();
+    chip.addEventListener("click", () => handleClick(chip, pos.id));
 
-      currentTarget = randomChoice(POSITIONS);
-      clueSpan.textContent = currentTarget.clueEs + " → (" + currentTarget.label + ")";
-    }
+    optionsDiv.appendChild(chip);
+    optionElements.push(chip);
+  });
+}
 
-    function checkAnswer(chipElement, chosenId) {
-      if (!currentTarget || gameLocked) return;
+function newQuestion() {
+  optionElements.forEach(o => o.classList.remove("correct","wrong"));
+  feedback.textContent = "";
+  feedback.className = "feedback";
+  clearBoard();
+  locked = false;
 
-      if (chosenId === currentTarget.id) {
-        chipElement.classList.add("correct");
-        feedbackEl.textContent =
-          "✅ Muy bien. \"" + currentTarget.label + "\" significa " + currentTarget.clueEs + ".";
-        feedbackEl.classList.remove("error");
-        feedbackEl.classList.add("ok");
-        gameLocked = true;
-        piece.classList.add("disabled");
-      } else {
-        chipElement.classList.add("wrong");
-        feedbackEl.textContent = "❌ No es esa postposición. Prueba otra.";
-        feedbackEl.classList.remove("ok");
-        feedbackEl.classList.add("error");
-        setTimeout(() => chipElement.classList.remove("wrong"), 300);
-        resetPiecePosition();
-      }
-    }
+  currentTarget = randomChoice(POSITIONS);
+  clueSpan.textContent = currentTarget.clue;
+}
 
-    // --- Drag de la ficha con pointer events ---
-    piece.addEventListener("pointerdown", (e) => {
-      if (gameLocked) return;
+function handleClick(chip, chosenId) {
 
-      dragging = true;
-      piece.setPointerCapture(e.pointerId);
-      piece.classList.add("dragging");
-      optionElements.forEach(chip => chip.classList.add("highlight"));
+  // Always show the clicked position visually
+  setBoardPosition(chosenId);
 
-      startClientX = e.clientX;
-      startClientY = e.clientY;
-      currentDX = 0;
-      currentDY = 0;
-    });
+  if (locked) return;
 
-    piece.addEventListener("pointermove", (e) => {
-      if (!dragging) return;
+  if (chosenId === currentTarget.id) {
+    chip.classList.add("correct");
+    feedback.textContent = "✔️ Oso ongi!";
+    feedback.className = "feedback ok";
+    locked = true;
+  } else {
+    chip.classList.add("wrong");
+    feedback.textContent = "❌ Ez da hori.";
+    feedback.className = "feedback error";
+    setTimeout(()=>chip.classList.remove("wrong"),250);
+  }
+}
 
-      const dx = e.clientX - startClientX;
-      const dy = e.clientY - startClientY;
-      currentDX = dx;
-      currentDY = dy;
+document.getElementById("next-btn").addEventListener("click", newQuestion);
 
-      piece.style.transform =
-        `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-    });
+document.getElementById("show-solution-btn").addEventListener("click", () => {
+  setBoardPosition(currentTarget.id);
 
-    piece.addEventListener("pointerup", (e) => {
-      if (!dragging) return;
+  const correctChip = optionElements.find(c => c.dataset.id === currentTarget.id);
+  correctChip.classList.add("correct");
 
-      dragging = false;
-      piece.releasePointerCapture(e.pointerId);
-      piece.classList.remove("dragging");
-      optionElements.forEach(chip => chip.classList.remove("highlight"));
+  feedback.textContent = "💡 Soluzioa: " + currentTarget.label;
+  feedback.className = "feedback";
+});
 
-      const x = e.clientX;
-      const y = e.clientY;
+initOptions();
+newQuestion();
 
-      let targetChip = null;
-      for (const chip of optionElements) {
-        const rect = chip.getBoundingClientRect();
-        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-          targetChip = chip;
-          break;
-        }
-      }
-
-      resetPiecePosition();
-
-      if (targetChip) {
-        const chosenId = targetChip.dataset.id;
-        checkAnswer(targetChip, chosenId);
-      }
-    });
-
-    piece.addEventListener("pointercancel", () => {
-      dragging = false;
-      piece.classList.remove("dragging");
-      optionElements.forEach(chip => chip.classList.remove("highlight"));
-      resetPiecePosition();
-    });
-
-    // Botones
-    nextBtn.addEventListener("click", setNewClue);
-
-    solutionBtn.addEventListener("click", () => {
-      if (!currentTarget) return;
-      optionElements.forEach(chip => chip.classList.remove("correct"));
-      const correctChip = optionElements.find(chip => chip.dataset.id === currentTarget.id);
-      if (correctChip) correctChip.classList.add("correct");
-
-      feedbackEl.textContent =
-        "💡 Solución: " + currentTarget.label + " (" + currentTarget.clueEs + ").";
-      feedbackEl.classList.remove("ok", "error");
-    });
-
-    // Inicialización
-    initOptions();
-    setNewClue();
-  </script>
+</script>
 </body>
 </html>
